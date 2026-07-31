@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đuổi Hình Bắt Chữ - TV Game Show Pro Edition</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@700;800;900&display=swap');
+        
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: #050811;
+            color: #f8fafc;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        .game-title-font {
+            font-family: 'Fredoka One', 'Nunito', cursive;
+        }
+
+        /* Ambient TV Stage Background */
+        .stage-bg {
+            background: radial-gradient(circle at 50% 30%, #1e1b4b 0%, #0f172a 60%, #020617 100%);
+            box-shadow: inset 0 0 100px rgba(0,0,0,0.8);
+        }
+
+        /* Metallic / Neon Glow Frame */
+        .tv-frame {
+            aspect-ratio: 16 / 9;
+            max-height: 96vh;
+            max-width: 98vw;
+            margin: auto;
+            border: 4px solid #38bdf8;
+            box-shadow: 0 0 35px rgba(56, 189, 248, 0.35), 0 0 80px rgba(0, 0, 0, 0.9);
+            border-radius: 1.75rem;
+            position: relative;
+            background: linear-gradient(180deg, rgba(15, 23, 42, 0.95) 0%, rgba(2, 6, 23, 0.98) 100%);
+        }
+
+        /* Glassmorphism Panel */
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+        }
+
+        /* SVG Stage Illustration Glow */
+        .illustration-card {
+            background: radial-gradient(ellipse at center, rgba(30, 58, 138, 0.4) 0%, rgba(15, 23, 42, 0.8) 100%);
+            border: 2px solid rgba(56, 189, 248, 0.3);
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.6), 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        /* Animated SVG elements */
+        @keyframes floatSlow {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-8px) rotate(1deg); }
+        }
+        .float-animated {
+            animation: floatSlow 3.5s ease-in-out infinite;
+        }
+
+        @keyframes pulseGlow {
+            0%, 100% { opacity: 0.85; filter: drop-shadow(0 0 8px rgba(250, 204, 21, 0.6)); }
+            50% { opacity: 1; filter: drop-shadow(0 0 20px rgba(250, 204, 21, 0.95)); }
+        }
+        .glow-animated {
+            animation: pulseGlow 2s infinite ease-in-out;
+        }
+
+        /* 3D Gold Letter Tile Styling */
+        .letter-tile {
+            perspective: 1000px;
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .letter-tile-inner {
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            transform-style: preserve-3d;
+        }
+
+        .letter-tile.revealed .letter-tile-inner {
+            transform: rotateY(180deg);
+        }
+
+        .tile-front {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            border: 2px solid #475569;
+            color: #94a3b8;
+            box-shadow: 0 6px 0 #020617, 0 8px 15px rgba(0,0,0,0.5);
+            backface-visibility: hidden;
+        }
+
+        .tile-back-revealed {
+            background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%);
+            border: 2px solid #fef08a;
+            color: #000000;
+            box-shadow: 0 6px 0 #92400e, 0 0 20px rgba(245, 158, 11, 0.8);
+            transform: rotateY(180deg);
+            backface-visibility: hidden;
+        }
+
+        .tile-back-hinted {
+            background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+            border: 2px solid #cff4fc;
+            color: #ffffff;
+            box-shadow: 0 6px 0 #155e75, 0 0 15px rgba(6, 182, 212, 0.8);
+            transform: rotateY(180deg);
+            backface-visibility: hidden;
+        }
+
+        /* Confetti Canvas Overlay */
+        #confetti-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        /* Pulsing Gold Button */
+        .btn-gold {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            box-shadow: 0 4px 0 #92400e, 0 0 18px rgba(245, 158, 11, 0.5);
+            transition: all 0.15s ease;
+        }
+        .btn-gold:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 0 #92400e, 0 0 25px rgba(245, 158, 11, 0.8);
+        }
+        .btn-gold:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 #92400e;
+        }
+
+        /* Custom scrollbar */
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.6); }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #3b82f6; border-radius: 4px; }
+    </style>
+</head>
+<body class="stage-bg flex items-center justify-center min-h-screen m-0 p-2 select-none overflow-hidden">
+
+    <div class="tv-frame w-full h-full flex flex-col justify-between overflow-hidden relative shadow-2xl">
+        
+        <!-- Canvas for Confetti Fireworks -->
+        <canvas id="confetti-canvas"></canvas>
+
+        <!-- TV Header Bar -->
+        <header class="glass-panel px-4 py-2.5 flex justify-between items-center z-20 border-b border-slate-700/80">
+            <!-- Brand Title -->
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-400 via-amber-500 to-yellow-300 flex items-center justify-center shadow-lg text-slate-950 font-black text-xl ring-2 ring-amber-300/60">
+                    <i class="fa-solid fa-trophy"></i>
+                </div>
+                <div>
+                    <h1 class="game-title-font text-xl md:text-2xl text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-amber-400 to-orange-400 uppercase tracking-wide drop-shadow-md">
+                        Đuổi Hình Bắt Chữ
+                    </h1>
+                    <p class="text-[10px] md:text-xs text-sky-400 font-bold tracking-widest uppercase">TRUNG TÂM NÔNG NGHIỆP SỐ • 25 CÂU HỎI TRUYỀN HÌNH</p>
+                </div>
+            </div>
+
+            <!-- Timer & Controls -->
+            <div class="flex items-center gap-2 md:gap-4">
+                <!-- Circular Ring Timer (30s) -->
+                <div class="flex items-center gap-2 bg-slate-900/90 px-3 py-1 rounded-xl border border-amber-500/40 shadow-lg cursor-pointer" id="btn-timer-toggle" title="Click để Bật/Tắt đếm giờ (Phím T)">
+                    <div class="relative w-8 h-8 flex items-center justify-center">
+                        <svg class="w-8 h-8 transform -rotate-90" viewBox="0 0 36 36">
+                            <path class="text-slate-800" stroke-width="3.5" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                            <path id="timer-ring" class="text-amber-400 transition-all duration-1000 ease-linear" stroke-dasharray="100, 100" stroke-width="3.5" stroke-linecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                        </svg>
+                        <span id="timer-display" class="absolute text-xs font-black font-mono text-amber-300">30</span>
+                    </div>
+                    <i class="fa-solid fa-play text-amber-400 text-xs" id="timer-icon"></i>
+                </div>
+
+                <!-- BGM Background Music Loop Toggle Button -->
+                <button id="btn-bgm-toggle" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-amber-400 font-bold flex items-center gap-2 shadow-md transition">
+                    <i class="fa-solid fa-music" id="bgm-icon"></i>
+                    <span class="text-xs text-slate-200 hidden sm:inline" id="bgm-text">Nhạc nền: Tắt</span>
+                </button>
+
+                <!-- Slide Counter Modal Button -->
+                <button id="btn-grid-modal" class="bg-indigo-600/90 hover:bg-indigo-500 text-white font-black px-3 py-1.5 rounded-xl border border-indigo-400/50 flex items-center gap-2 shadow-md">
+                    <i class="fa-solid fa-border-all"></i>
+                    <span>Câu <span id="current-slide-num">1</span>/25</span>
+                </button>
+
+                <!-- Fullscreen Toggle -->
+                <button id="btn-fullscreen" class="w-9 h-9 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-200 flex items-center justify-center shadow-md">
+                    <i class="fa-solid fa-expand"></i>
+                </button>
+            </div>
+        </header>
+
+        <main class="flex-grow flex flex-col justify-between items-center p-2 md:p-3 relative overflow-hidden">
+            
+            <!-- Image Stage Container (Top 65% area) -->
+            <div class="w-full flex-grow max-h-[64%] relative flex items-center justify-center rounded-2xl illustration-card p-2 shadow-2xl overflow-hidden">
+                <div id="illustration-stage" class="w-full h-full flex items-center justify-center relative">
+                    <!-- Image dynamically loaded here via JS -->
+                </div>
+            </div>
+
+            <div class="w-full min-h-[30%] my-1.5 flex flex-col justify-center items-center bg-slate-900/80 border-2 border-indigo-500/30 rounded-2xl p-2.5 shadow-2xl backdrop-blur-md">
+                <div id="letters-container" class="w-full flex flex-col items-center justify-center gap-2">
+                    <!-- Letter tiles dynamically built by JS -->
+                </div>
+            </div>
+
+        </main>
+
+        <footer class="glass-panel px-4 py-2.5 flex justify-between items-center z-20 border-t border-slate-700/80">
+            <!-- Prev Slide Button -->
+            <button id="btn-prev" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-white font-bold flex items-center gap-2 transition disabled:opacity-30 disabled:cursor-not-allowed shadow-md">
+                <i class="fa-solid fa-chevron-left"></i>
+                <span class="hidden sm:inline">Câu trước</span>
+            </button>
+
+            <!-- Game Action Buttons -->
+            <div class="flex items-center gap-2 md:gap-3">
+                <button id="btn-hint" class="px-3 md:px-4 py-2 rounded-xl bg-cyan-700 hover:bg-cyan-600 border border-cyan-400 text-white font-extrabold flex items-center gap-2 shadow-lg transition active:scale-95">
+                    <i class="fa-solid fa-lightbulb text-yellow-300"></i>
+                    <span>Gợi Ý (1 Ô)</span>
+                </button>
+
+                <button id="btn-reveal" class="btn-gold px-5 md:px-7 py-2 rounded-xl text-slate-950 font-black flex items-center gap-2 text-base md:text-lg tracking-wide">
+                    <i class="fa-solid fa-key"></i>
+                    <span>MỞ ĐÁP ÁN</span>
+                </button>
+
+                <button id="btn-reset-answer" class="px-3 md:px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-300 font-bold flex items-center gap-1.5 shadow-md">
+                    <i class="fa-solid fa-rotate-right"></i>
+                    <span>Ẩn lại</span>
+                </button>
+            </div>
+
+            <!-- Next Slide Button -->
+            <button id="btn-next" class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 border border-blue-400 text-white font-bold flex items-center gap-2 transition shadow-lg disabled:opacity-30 disabled:cursor-not-allowed">
+                <span class="hidden sm:inline">Câu tiếp</span>
+                <i class="fa-solid fa-chevron-right"></i>
+            </button>
+        </footer>
+
+        <!-- Modal: Question Grid Switcher -->
+        <div id="grid-modal" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+            <div class="bg-slate-900 border-2 border-indigo-500/80 rounded-2xl max-w-2xl w-full p-6 shadow-2xl relative flex flex-col max-h-[90vh]">
+                <div class="flex justify-between items-center mb-4 border-b border-slate-800 pb-3">
+                    <h3 class="text-xl font-black text-amber-400 flex items-center gap-2">
+                        <i class="fa-solid fa-list-ol"></i> Chọn Câu Hỏi (25 Màn Hình)
+                    </h3>
+                    <button id="btn-close-grid" class="w-8 h-8 rounded-full bg-slate-800 text-slate-400 hover:bg-slate-700 flex items-center justify-center">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+                <div id="questions-grid" class="grid grid-cols-5 gap-3 overflow-y-auto custom-scrollbar p-1">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Toast Notification -->
+        <div id="toast" class="fixed top-16 left-1/2 transform -translate-x-1/2 bg-amber-400 text-slate-950 px-6 py-2 rounded-full shadow-2xl font-black text-sm opacity-0 transition-opacity duration-300 pointer-events-none z-50 flex items-center gap-2 border-2 border-yellow-200">
+            <i class="fa-solid fa-circle-check"></i> <span id="toast-text">Thông báo</span>
+        </div>
+
+    </div>
+
+    <script>
+        const questionsData = [
+            { id: 1, answer: "LÊN VOI XUỐNG CHÓ", wordsRows: [["LÊN", "VOI", "XUỐNG", "CHÓ"]], image: "image/1.png" },
+            { id: 2, answer: "NƯỚC ĐẾN CHÂN MỚI NHẢY", wordsRows: [["NƯỚC", "ĐẾN", "CHÂN", "MỚI", "NHẢY"]], image: "image/2.png" },
+            { id: 3, answer: "ĐỨNG NÚI NÀY TRÔNG NÚI NỌ", wordsRows: [["ĐỨNG", "NÚI", "NÀY", "TRÔNG", "NÚI", "NỌ"]], image: "image/3.png" },
+            { id: 4, answer: "MỘT CON NGỰA ĐAU CẢ TÀU BỎ CỎ", wordsRows: [["MỘT", "CON", "NGỰA", "ĐAU"], ["CẢ", "TÀU", "BỎ", "CỎ"]], image: "image/4.png" },
+            { id: 5, answer: "RƯỢU VÀO LỜI RA", wordsRows: [["RƯỢU", "VÀO", "LỜI", "RA"]], image: "image/5.png" },
+            { id: 6, answer: "CÓ LÀM THÌ MỚI CÓ ĂN", wordsRows: [["CÓ", "LÀM", "THÌ", "MỚI", "CÓ", "ĂN"]], image: "image/6.png" },
+            { id: 7, answer: "NHẤT NƯỚC NHÌ PHÂN TAM CẦN TỨ GIỐNG", wordsRows: [["NHẤT", "NƯỚC", "NHÌ", "PHÂN"], ["TAM", "CẦN", "TỨ", "GIỐNG"]], image: "image/7.png" },
+            { id: 8, answer: "BÁN MẶT CHO ĐẤT BÁN LƯNG CHO TRỜI", wordsRows: [["BÁN", "MẶT", "CHO", "ĐẤT"], ["BÁN", "LƯNG", "CHO", "TRỜI"]], image: "image/8.png" },
+            { id: 9, answer: "CHUỒNG GÀ HƯỚNG ĐÔNG CÁI LÔNG CHẲNG CÒN", wordsRows: [["CHUỒNG", "GÀ", "HƯỚNG", "ĐÔNG"], ["CÁI", "LÔNG", "CHẲNG", "CÒN"]], image: "image/9.png" },
+            { id: 10, answer: "TẤC ĐẤT TẤC VÀNG", wordsRows: [["TẤC", "ĐẤT", "TẤC", "VÀNG"]], image: "image/10.png" },
+            { id: 11, answer: "CÀY SÂU CUỐC BẪM", wordsRows: [["CÀY", "SÂU", "CUỐC", "BẪM"]], image: "image/11.png" },
+            { id: 12, answer: "NẮNG TỐT DƯA MƯA TỐT LÚA", wordsRows: [["NẮNG", "TỐT", "DƯA"], ["MƯA", "TỐT", "LÚA"]], image: "image/12.png" },
+            { id: 13, answer: "TRÔNG TRỜI TRÔNG ĐẤT TRÔNG MÂY", wordsRows: [["TRÔNG", "TRỜI", "TRÔNG"], ["ĐẤT", "TRÔNG", "MÂY"]], image: "image/13.png" },
+            { id: 14, answer: "ĂN QUẢ NHỚ KẺ TRỒNG CÂY", wordsRows: [["ĂN", "QUẢ", "NHỚ"], ["KẺ", "TRỒNG", "CÂY"]], image: "image/14.png" },
+            { id: 15, answer: "CÓ CÔNG MÀI SẮT CÓ NGÀY NÊN KIM", wordsRows: [["CÓ", "CÔNG", "MÀI", "SẮT"], ["CÓ", "NGÀY", "NÊN", "KIM"]], image: "image/15.png" },
+            { id: 16, answer: "UỐNG NƯỚC NHỚ NGUỒN", wordsRows: [["UỐNG", "NƯỚC", "NHỚ", "NGUỒN"]], image: "image/16.png" },
+            { id: 17, answer: "MỘT CÂY LÀM CHẲNG NÊN NON BA CÂY CHỤM LẠI NÊN HÒN NÚI CAO", wordsRows: [["MỘT", "CÂY", "LÀM", "CHẲNG", "NÊN", "NON"], ["BA", "CÂY", "CHỤM", "LẠI", "NÊN", "HÒN", "NÚI", "CAO"]], image: "image/17.png" },
+            { id: 18, answer: "LÁ LÀNH ĐÙM LÁ RÁCH", wordsRows: [["LÁ", "LÀNH", "ĐÙM", "LÁ", "RÁCH"]], image: "image/18.png" },
+            { id: 19, answer: "MÈO MÙ VỚ CÁ RÁN", wordsRows: [["MÈO", "MÙ", "VỚ", "CÁ", "RÁN"]], image: "image/19.png" },
+            { id: 20, answer: "ĐẦU VOI ĐUÔI CHUỘT", wordsRows: [["ĐẦU", "VOI", "ĐUÔI", "CHUỘT"]], image: "image/20.png" },
+            { id: 21, answer: "ẾCH NGỒI ĐÁY GIẾNG", wordsRows: [["ẾCH", "NGỒI", "ĐÁY", "GIẾNG"]], image: "image/21.png" },
+            { id: 22, answer: "NÉM ĐÁ GIẤU TAY", wordsRows: [["NÉM", "ĐÁ", "GIẤU", "TAY"]], image: "image/22.png" },
+            { id: 23, answer: "HÁ MIỆNG CHỜ SUNG", wordsRows: [["HÁ", "MIỆNG", "CHỜ", "SUNG"]], image: "image/23.png" },
+            { id: 24, answer: "ĐƯỢC VOI ĐÒI TIÊN", wordsRows: [["ĐƯỢC", "VOI", "ĐÒI", "TIÊN"]], image: "image/24.png" },
+            { id: 25, answer: "CHÂN LẤM TAY BÙN", wordsRows: [["CHÂN", "LẤM", "TAY", "BÙN"]], image: "image/25.png" }
+        ];
+
+        /* State Variables */
+        let currentIdx = 0;
+        let timerInterval = null;
+        let timerSeconds = 30;
+        let isTimerRunning = false;
+
+        const bgmPlaylist = ["image/audio1.mp3", "image/audio2.mp3", "image/audio1.wav", "image/audio2.wav"];
+        let currentBgmTrackIdx = 0;
+        const bgmAudio = new Audio();
+        bgmAudio.volume = 0.5; // Moderate background volume
+        let isBgmPlaying = false;
+
+        function playBgmTrack(index) {
+            if (!isBgmPlaying) return;
+            currentBgmTrackIdx = index % 2; // Switch between 0 and 1
+            bgmAudio.src = bgmPlaylist[currentBgmTrackIdx];
+            bgmAudio.play().then(() => {
+                showToast(`Đang phát nhạc nền ${currentBgmTrackIdx + 1}`);
+            }).catch(err => {
+                // If mp3 fails, try wav fallback
+                bgmAudio.src = bgmPlaylist[currentBgmTrackIdx + 2];
+                bgmAudio.play().catch(e => {
+                    console.log("Audio file missing/blocked:", e);
+                    showToast(`Chưa thấy file: image/audio${currentBgmTrackIdx + 1}`);
+                });
+            });
+        }
+
+        bgmAudio.addEventListener('ended', () => {
+            if (isBgmPlaying) {
+                // Automatically alternate between audio1 and audio2
+                let nextIdx = (currentBgmTrackIdx + 1) % 2;
+                playBgmTrack(nextIdx);
+            }
+        });
+
+        const btnBgmToggle = document.getElementById('btn-bgm-toggle');
+        const bgmIcon = document.getElementById('bgm-icon');
+        const bgmText = document.getElementById('bgm-text');
+
+        btnBgmToggle.onclick = () => {
+            isBgmPlaying = !isBgmPlaying;
+            if (isBgmPlaying) {
+                bgmIcon.className = "fa-solid fa-compact-disc fa-spin text-emerald-400";
+                bgmText.innerText = "Nhạc nền: Bật";
+                btnBgmToggle.classList.add('border-emerald-500', 'bg-emerald-950/60');
+                playBgmTrack(0);
+            } else {
+                bgmAudio.pause();
+                bgmIcon.className = "fa-solid fa-music text-amber-400";
+                bgmText.innerText = "Nhạc nền: Tắt";
+                btnBgmToggle.classList.remove('border-emerald-500', 'bg-emerald-950/60');
+                showToast("Đã tắt nhạc nền");
+            }
+        };
+
+        /* DOM References */
+        const illustrationStage = document.getElementById('illustration-stage');
+        const lettersContainer = document.getElementById('letters-container');
+        const currentSlideNum = document.getElementById('current-slide-num');
+        const timerDisplay = document.getElementById('timer-display');
+        const timerRing = document.getElementById('timer-ring');
+        const timerIcon = document.getElementById('timer-icon');
+
+        const btnPrev = document.getElementById('btn-prev');
+        const btnNext = document.getElementById('btn-next');
+        const btnHint = document.getElementById('btn-hint');
+        const btnReveal = document.getElementById('btn-reveal');
+        const btnResetAnswer = document.getElementById('btn-reset-answer');
+
+        const gridModal = document.getElementById('grid-modal');
+        const btnGridModal = document.getElementById('btn-grid-modal');
+        const btnCloseGrid = document.getElementById('btn-close-grid');
+        const questionsGrid = document.getElementById('questions-grid');
+
+        const toast = document.getElementById('toast');
+        const toastText = document.getElementById('toast-text');
+
+        function renderSlide(index) {
+            currentIdx = index;
+            const data = questionsData[index];
+
+            currentSlideNum.innerText = index + 1;
+            
+            // Render <img> tag with fallback placeholder if image doesn't exist yet
+            illustrationStage.innerHTML = `
+                <img src="${data.image}" 
+                     alt="Câu ${data.id}: ${data.answer}" 
+                     class="max-h-full max-w-full object-contain rounded-xl shadow-lg border border-slate-700/50 transition-all duration-300 hover:scale-[1.02]" 
+                     onerror="this.onerror=null; this.src='https://placehold.co/1280x720/0f172a/38bdf8?text=Ch%C6%B0a+t%E1%BA%A3i+%E1%BA%A3nh+image%2F${data.id}.png';"/>
+            `;
+
+            renderLetterBoxes(data);
+
+            btnPrev.disabled = index === 0;
+            btnNext.disabled = index === questionsData.length - 1;
+
+            resetTimer();
+        }
+
+        function renderLetterBoxes(data) {
+            lettersContainer.innerHTML = '';
+
+            data.wordsRows.forEach((rowWords) => {
+                const rowDiv = document.createElement('div');
+                rowDiv.className = "flex flex-wrap justify-center items-center gap-2.5 md:gap-3.5 my-1";
+
+                rowWords.forEach((word) => {
+                    const wordDiv = document.createElement('div');
+                    wordDiv.className = "flex items-center gap-1 md:gap-1.5 bg-slate-950/60 p-1.5 rounded-xl border border-slate-700/60 shadow-inner";
+
+                    for (let i = 0; i < word.length; i++) {
+                        const char = word[i];
+                        
+                        // 3D Tile Container
+                        const tile = document.createElement('div');
+                        tile.className = "letter-tile w-8 h-10 sm:w-10 sm:h-12 md:w-11 md:h-13 lg:w-12 lg:h-14 cursor-pointer";
+                        
+                        const tileInner = document.createElement('div');
+                        tileInner.className = "letter-tile-inner w-full h-full relative rounded-lg font-black text-lg sm:text-xl md:text-2xl lg:text-3xl flex items-center justify-center select-none";
+
+                        // Tile Front (Hidden State)
+                        const front = document.createElement('div');
+                        front.className = "tile-front absolute inset-0 rounded-lg flex items-center justify-center";
+                        front.innerText = "?";
+
+                        // Tile Back (Revealed State)
+                        const back = document.createElement('div');
+                        back.className = "tile-back-revealed absolute inset-0 rounded-lg flex items-center justify-center";
+                        back.innerText = char;
+
+                        tileInner.appendChild(front);
+                        tileInner.appendChild(back);
+                        tile.appendChild(tileInner);
+
+                        tile.dataset.char = char;
+                        tile.dataset.revealed = "false";
+
+                        // Click single tile reveal
+                        tile.addEventListener('click', () => {
+                            if (tile.dataset.revealed === "false") {
+                                tile.dataset.revealed = "true";
+                                back.className = "tile-back-hinted absolute inset-0 rounded-lg flex items-center justify-center";
+                                tile.classList.add('revealed');
+                            }
+                        });
+
+                        wordDiv.appendChild(tile);
+                    }
+                    rowDiv.appendChild(wordDiv);
+                });
+
+                lettersContainer.appendChild(rowDiv);
+            });
+        }
+
+        function revealFullAnswer() {
+            const tiles = lettersContainer.querySelectorAll('.letter-tile');
+            tiles.forEach((tile) => {
+                tile.dataset.revealed = "true";
+                const back = tile.querySelector('.tile-back-revealed, .tile-back-hinted');
+                if (back) back.className = "tile-back-revealed absolute inset-0 rounded-lg flex items-center justify-center";
+                tile.classList.add('revealed');
+            });
+            showToast("Đã mở toàn bộ đáp án!");
+        }
+
+        function resetAnswerBoxes() {
+            const tiles = lettersContainer.querySelectorAll('.letter-tile');
+            tiles.forEach((tile) => {
+                tile.dataset.revealed = "false";
+                tile.classList.remove('revealed');
+            });
+        }
+
+        function revealRandomHint() {
+            const tiles = Array.from(lettersContainer.querySelectorAll('.letter-tile'));
+            const unrevealed = tiles.filter(t => t.dataset.revealed === "false");
+
+            if (unrevealed.length > 0) {
+                const randomTile = unrevealed[Math.floor(Math.random() * unrevealed.length)];
+                randomTile.dataset.revealed = "true";
+                const back = randomTile.querySelector('.tile-back-revealed');
+                if (back) back.className = "tile-back-hinted absolute inset-0 rounded-lg flex items-center justify-center";
+                randomTile.classList.add('revealed');
+            } else {
+                showToast("Tất cả ô chữ đã được lật mở!");
+            }
+        }
+
+        function toggleTimer() {
+            if (isTimerRunning) {
+                pauseTimer();
+            } else {
+                startTimer();
+            }
+        }
+
+        function startTimer() {
+            if (timerSeconds <= 0) timerSeconds = 30;
+            isTimerRunning = true;
+            timerIcon.className = "fa-solid fa-pause text-amber-400 text-xs";
+            
+            timerInterval = setInterval(() => {
+                timerSeconds--;
+                timerDisplay.innerText = timerSeconds;
+
+                // Update SVG ring percentage
+                const offset = (timerSeconds / 30) * 100;
+                timerRing.setAttribute('stroke-dasharray', `${offset}, 100`);
+
+                // Dynamic Color Warning
+                if (timerSeconds <= 5) {
+                    timerRing.setAttribute('class', 'text-rose-500 transition-all duration-1000 ease-linear');
+                } else if (timerSeconds <= 15) {
+                    timerRing.setAttribute('class', 'text-amber-400 transition-all duration-1000 ease-linear');
+                } else {
+                    timerRing.setAttribute('class', 'text-emerald-400 transition-all duration-1000 ease-linear');
+                }
+
+                if (timerSeconds <= 0) {
+                    pauseTimer();
+                    showToast("Hết 30 giây trả lời!");
+                }
+            }, 1000);
+        }
+
+        function pauseTimer() {
+            isTimerRunning = false;
+            timerIcon.className = "fa-solid fa-play text-amber-400 text-xs";
+            if (timerInterval) clearInterval(timerInterval);
+        }
+
+        function resetTimer() {
+            pauseTimer();
+            timerSeconds = 30;
+            timerDisplay.innerText = "30";
+            timerRing.setAttribute('stroke-dasharray', '100, 100');
+            timerRing.setAttribute('class', 'text-amber-400 transition-all duration-1000 ease-linear');
+        }
+
+        /* Question Grid Switcher Modal */
+        function initQuestionsGrid() {
+            questionsGrid.innerHTML = '';
+            questionsData.forEach((q, idx) => {
+                const btn = document.createElement('button');
+                btn.className = "p-3 rounded-xl border flex flex-col items-center justify-center font-bold text-center transition shadow-md " + 
+                    (idx === currentIdx ? "bg-amber-500 text-slate-950 border-amber-300 font-extrabold ring-2 ring-amber-300" : "bg-slate-800/80 hover:bg-slate-700 border-slate-600 text-slate-200");
+                btn.innerHTML = `<span class="text-base">Câu ${idx+1}</span><span class="text-[10px] opacity-80 truncate max-w-[100px]">${q.answer}</span>`;
+                btn.onclick = () => {
+                    renderSlide(idx);
+                    gridModal.classList.add('hidden');
+                };
+                questionsGrid.appendChild(btn);
+            });
+        }
+
+        btnGridModal.onclick = () => {
+            initQuestionsGrid();
+            gridModal.classList.remove('hidden');
+        };
+        btnCloseGrid.onclick = () => gridModal.classList.add('hidden');
+
+        function showToast(msg) {
+            toastText.innerText = msg;
+            toast.style.opacity = '1';
+            setTimeout(() => { toast.style.opacity = '0'; }, 2200);
+        }
+
+        /* Event Listeners */
+        btnPrev.onclick = () => { if (currentIdx > 0) renderSlide(currentIdx - 1); };
+        btnNext.onclick = () => { if (currentIdx < questionsData.length - 1) renderSlide(currentIdx + 1); };
+        btnReveal.onclick = () => revealFullAnswer();
+        btnResetAnswer.onclick = () => resetAnswerBoxes();
+        btnHint.onclick = () => revealRandomHint();
+        document.getElementById('btn-timer-toggle').onclick = () => toggleTimer();
+
+        // Fullscreen Toggle
+        document.getElementById('btn-fullscreen').onclick = () => {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => console.log(err));
+            } else {
+                document.exitFullscreen();
+            }
+        };
+
+        // Keyboard Navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === 'PageDown') {
+                if (currentIdx < questionsData.length - 1) renderSlide(currentIdx + 1);
+            } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+                if (currentIdx > 0) renderSlide(currentIdx - 1);
+            } else if (e.key === ' ') {
+                e.preventDefault();
+                revealFullAnswer();
+            } else if (e.key === 'h' || e.key === 'H') {
+                revealRandomHint();
+            } else if (e.key === 't' || e.key === 'T') {
+                toggleTimer();
+            }
+        });
+
+        // Initialize First Slide
+        window.onload = () => {
+            renderSlide(0);
+        };
+    </script>
+</body>
+</html>
