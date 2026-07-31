@@ -225,14 +225,15 @@
 
             <!-- Game Action Buttons -->
             <div class="flex items-center gap-2 md:gap-3">
+                <!-- Toggle Image Button -->
+                <button id="btn-toggle-image" class="px-3 md:px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 border border-emerald-400 text-white font-extrabold flex items-center gap-2 shadow-lg transition active:scale-95">
+                    <i class="fa-solid fa-image text-amber-300" id="icon-toggle-image"></i>
+                    <span id="text-toggle-image">Mở Hình Ảnh</span>
+                </button>
+
                 <button id="btn-hint" class="px-3 md:px-4 py-2 rounded-xl bg-cyan-700 hover:bg-cyan-600 border border-cyan-400 text-white font-extrabold flex items-center gap-2 shadow-lg transition active:scale-95">
                     <i class="fa-solid fa-lightbulb text-yellow-300"></i>
                     <span>Gợi Ý (1 Ô)</span>
-                </button>
-
-                <button id="btn-reveal" class="btn-gold px-5 md:px-7 py-2 rounded-xl text-slate-950 font-black flex items-center gap-2 text-base md:text-lg tracking-wide">
-                    <i class="fa-solid fa-key"></i>
-                    <span>MỞ ĐÁP ÁN</span>
                 </button>
 
                 <button id="btn-reset-answer" class="px-3 md:px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-300 font-bold flex items-center gap-1.5 shadow-md">
@@ -306,6 +307,7 @@
         let timerInterval = null;
         let timerSeconds = 30;
         let isTimerRunning = false;
+        let isImageRevealed = false;
 
         const bgmPlaylist = ["image/audio1.mp3", "image/audio2.mp3", "image/audio1.wav", "image/audio2.wav"];
         let currentBgmTrackIdx = 0;
@@ -368,7 +370,6 @@
         const btnPrev = document.getElementById('btn-prev');
         const btnNext = document.getElementById('btn-next');
         const btnHint = document.getElementById('btn-hint');
-        const btnReveal = document.getElementById('btn-reveal');
         const btnResetAnswer = document.getElementById('btn-reset-answer');
 
         const gridModal = document.getElementById('grid-modal');
@@ -381,24 +382,70 @@
 
         function renderSlide(index) {
             currentIdx = index;
+            isImageRevealed = false; // Reset image hide state on new slide
             const data = questionsData[index];
 
             currentSlideNum.innerText = index + 1;
             
-            // Render <img> tag with fallback placeholder if image doesn't exist yet
-            illustrationStage.innerHTML = `
-                <img src="${data.image}" 
-                     alt="Câu ${data.id}: ${data.answer}" 
-                     class="max-h-full max-w-full object-contain rounded-xl shadow-lg border border-slate-700/50 transition-all duration-300 hover:scale-[1.02]" 
-                     onerror="this.onerror=null; this.src='https://placehold.co/1280x720/0f172a/38bdf8?text=Ch%C6%B0a+t%E1%BA%A3i+%E1%BA%A3nh+image%2F${data.id}.png';"/>
-            `;
-
+            updateImageStage();
             renderLetterBoxes(data);
 
             btnPrev.disabled = index === 0;
             btnNext.disabled = index === questionsData.length - 1;
 
             resetTimer();
+        }
+
+        function updateImageStage() {
+            const data = questionsData[currentIdx];
+            const btnToggleImg = document.getElementById('btn-toggle-image');
+            const iconToggleImg = document.getElementById('icon-toggle-image');
+            const textToggleImg = document.getElementById('text-toggle-image');
+
+            if (isImageRevealed) {
+                illustrationStage.innerHTML = `
+                    <img src="${data.image}" 
+                         alt="Câu ${data.id}: ${data.answer}" 
+                         class="max-h-full max-w-full object-contain rounded-xl shadow-lg border border-slate-700/50 transition-all duration-300 hover:scale-[1.02]" 
+                         onerror="this.onerror=null; this.src='https://placehold.co/1280x720/0f172a/38bdf8?text=Ch%C6%B0a+t%E1%BA%A3i+%E1%BA%A3nh+image%2F${data.id}.png';"/>
+                `;
+                if (btnToggleImg) {
+                    btnToggleImg.className = "px-3 md:px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-200 font-bold flex items-center gap-2 shadow-md transition active:scale-95";
+                    if (iconToggleImg) iconToggleImg.className = "fa-solid fa-eye-slash text-rose-400";
+                    if (textToggleImg) textToggleImg.innerText = "Ẩn Hình Ảnh";
+                }
+            } else {
+                illustrationStage.innerHTML = `
+                    <div class="flex flex-col items-center justify-center gap-3 text-center p-6 bg-slate-900/90 rounded-2xl border border-indigo-500/40 shadow-2xl backdrop-blur-md">
+                        <div class="w-16 h-16 rounded-full bg-indigo-950 border-2 border-indigo-500/60 flex items-center justify-center text-amber-400 text-2xl shadow-lg animate-pulse">
+                            <i class="fa-solid fa-image"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-lg md:text-xl font-black text-amber-400 mb-0.5">CÂU HỎI SỐ ${data.id}</h3>
+                            <p class="text-xs text-slate-300">Hình ảnh câu hỏi đang được ẩn</p>
+                        </div>
+                        <button onclick="toggleImage()" class="btn-gold font-black text-slate-950 px-5 py-2.5 rounded-xl flex items-center gap-2 text-sm shadow-xl active:scale-95 transition">
+                            <i class="fa-solid fa-eye"></i>
+                            <span>BẤM ĐỂ MỞ HÌNH ÁNH</span>
+                        </button>
+                    </div>
+                `;
+                if (btnToggleImg) {
+                    btnToggleImg.className = "px-3 md:px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 border border-emerald-400 text-white font-extrabold flex items-center gap-2 shadow-lg transition active:scale-95";
+                    if (iconToggleImg) iconToggleImg.className = "fa-solid fa-image text-amber-300";
+                    if (textToggleImg) textToggleImg.innerText = "Mở Hình Ảnh";
+                }
+            }
+        }
+
+        function toggleImage() {
+            isImageRevealed = !isImageRevealed;
+            updateImageStage();
+            if (isImageRevealed) {
+                showToast("Đã mở hình ảnh câu hỏi!");
+            } else {
+                showToast("Đã ẩn hình ảnh!");
+            }
         }
 
         function renderLetterBoxes(data) {
@@ -571,9 +618,9 @@
         }
 
         /* Event Listeners */
+        document.getElementById('btn-toggle-image').onclick = () => toggleImage();
         btnPrev.onclick = () => { if (currentIdx > 0) renderSlide(currentIdx - 1); };
         btnNext.onclick = () => { if (currentIdx < questionsData.length - 1) renderSlide(currentIdx + 1); };
-        btnReveal.onclick = () => revealFullAnswer();
         btnResetAnswer.onclick = () => resetAnswerBoxes();
         btnHint.onclick = () => revealRandomHint();
         document.getElementById('btn-timer-toggle').onclick = () => toggleTimer();
@@ -600,6 +647,8 @@
                 revealRandomHint();
             } else if (e.key === 't' || e.key === 'T') {
                 toggleTimer();
+            } else if (e.key === 'i' || e.key === 'I') {
+                toggleImage();
             }
         });
 
